@@ -13,7 +13,7 @@ filepath = 'D:\\Python_DOCS\\STOCK_CSVs\\'
 #symPATH = 'D:\\Stock_stuff\\OO_DIVS.csv'
 #symbols = pd.read_csv(symPATH)
 #symbols.info()
-symbols = ['RKLB','USAR','NVAX','NFLX','HOOD','AAPL','SOFI']
+symbols = ["list of stock tickers goes here"]# or you can import from a list from csv etc...
 
 
 ##########################
