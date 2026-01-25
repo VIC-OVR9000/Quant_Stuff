@@ -1,0 +1,70 @@
+import os
+from alpaca.trading.client import TradingClient
+from alpaca.trading.requests import MarketOrderRequest, GetOrdersRequest
+from alpaca.trading.enums import OrderSide, TimeInForce
+from alpaca.common.exceptions import APIError
+
+# --- Configuration ---
+# Set API keys as environment variables for security:
+# ALAPCA_API_KEY_ID and ALAPCA_SECRET_KEY
+api_key = os.getenv("ALAPCA_API_KEY_ID")
+secret_key = os.getenv("ALAPCA_SECRET_KEY")
+TARGET_PROFIT_PERCENT = 1.0 # 1% return
+# Set paper=True for paper trading, False for live trading
+PAPER_TRADING = True
+# ---------------------
+
+# Initialize the TradingClient
+trading_client = TradingClient(api_key, secret_key, paper=PAPER_TRADING)
+
+def check_and_sell_positions(target_percent):
+    """
+    Checks open positions for a target profit percentage and sells them if the condition is met.
+    """
+    try:
+        # Get all open positions
+        positions = trading_client.get_all_positions()
+        
+        if not positions:
+            print("No open positions found.")
+            return
+
+        for position in positions:
+            symbol = position.symbol
+            # The 'unrealized_plpc' field provides the unrealized P/L percent as a string
+            # Convert it to a float for comparison
+            pnl_percent = float(position.unrealized_plpc)
+
+            print(f"Position in {symbol}: Current P/L percent: {pnl_percent:.2f}%")
+
+            if pnl_percent >= target_percent:
+                print(f"Target profit of {target_percent}% reached for {symbol}. Submitting sell order.")
+
+                # Determine the quantity to sell (full position quantity)
+                # Convert string quantity to float, then to int if fractional shares aren't desired
+                qty_to_sell = float(position.qty)
+
+                # Create a market order request to sell the position
+                order_data = MarketOrderRequest(
+                    symbol=symbol,
+                    qty=qty_to_sell,
+                    side=OrderSide.SELL,
+                    time_in_force=TimeInForce.DAY
+                )
+                
+                # Submit the order
+                submit_order_response = trading_client.submit_order(order_data)
+                print(f"Sell order for {symbol} submitted. Order ID: {submit_order_response.id}")
+            else:
+                print(f"Target profit not yet reached for {symbol}.")
+
+    except APIError as e:
+        print(f"An API error occurred: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+if __name__ == "__main__":
+    print(f"--- Running position check for {TARGET_PROFIT_PERCENT}% return threshold ---")
+    # This function should be called repeatedly for continuous monitoring
+    check_and_sell_positions(TARGET_PROFIT_PERCENT)
+
