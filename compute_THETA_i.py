@@ -47,7 +47,7 @@ class BlackScholesGreeks:
 
 
 # 1. Fetch market data
-ticker = yf.Ticker("USAR")
+ticker = yf.Ticker("ROBN")
 current_price = ticker.fast_info['lastPrice']
 expirations = ticker.options
 
@@ -59,7 +59,7 @@ for j in range(len(expirations)):
     print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
     print("-" * 140)
     
-    for i in range(len(expirations[j])):
+    for i in range(len(expirations[j])-1):
         chain = ticker.option_chain(expirations[j])
         
         # 2. Extract parameters (using first call for each expiration)
