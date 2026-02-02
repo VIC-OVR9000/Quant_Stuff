@@ -3,50 +3,75 @@ import yfinance as yf
 from scipy.stats import norm
 from datetime import datetime
 
-def black_scholes_theta(S, K, T, r, sigma, option_type='call'):
-    # d1 and d2 calculations
-    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
-    d2 = d1 - sigma * np.sqrt(T)
-    
-    # Yearly Theta formula
-    term1 = -(S * norm.pdf(d1) * sigma) / (2 * np.sqrt(T)+0.0000001)
-    if option_type == 'call':
-        term2 = r * K * np.exp(-r * T) * norm.cdf(d2)
-        theta = term1 - term2
-    else:
-        term2 = r * K * np.exp(-r * T) * norm.cdf(-d2)
-        theta = term1 + term2
+class BlackScholesGreeks:
+    def __init__(self, S, K, T, r, sigma):
+        self.S = S
+        self.K = K
+        self.T = max(T, 0.00001)  # Avoid division by zero
+        self.r = r
+        self.sigma = sigma
         
-    return theta / 365  # Return daily decay
+        self.d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * self.T) / (sigma * np.sqrt(self.T)+0.0000001)
+        self.d2 = self.d1 - sigma * np.sqrt(self.T)
+
+    def delta(self, option_type='call'):
+        if option_type == 'call':
+            return norm.cdf(self.d1)
+        return norm.cdf(self.d1) - 1
+
+    def gamma(self):
+        # Gamma is the same for calls and puts
+        return norm.pdf(self.d1) / (self.S * self.sigma * np.sqrt(self.T)+0.0000001)
+
+    def vega(self):
+        # Vega is the same for calls and puts; returned as change per 1% move in vol
+        return (self.S * norm.pdf(self.d1) * np.sqrt(self.T)) / 100
+
+    def theta(self, option_type='call'):
+        term1 = -(self.S * norm.pdf(self.d1) * self.sigma) / (2 * np.sqrt(self.T))
+        if option_type == 'call':
+            term2 = self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(self.d2)
+            return (term1 - term2) / 365
+        else:
+            term2 = self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(-self.d2)
+            return (term1 + term2) / 365
+
+    def rho(self, option_type='call'):
+        # Returned as change per 1% move in interest rates
+        if option_type == 'call':
+            return (self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(self.d2)) / 100
+        else:
+            return (-self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(-self.d2)) / 100
 
 # 1. Fetch market data
 ticker = yf.Ticker("USAR")
 current_price = ticker.fast_info['lastPrice']
 expirations = ticker.options
-theta_list = []
 
+print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8}")
+print("-" * 65)
 
 for i in range(len(expirations)):
-
-    chain = ticker.option_chain(expirations[i]) # Get nearest expiration
-
-    # 2. Extract parameters for a specific strike
-    opt = chain.calls.iloc[i] # Example: first call option
+    chain = ticker.option_chain(expirations[i])
+    
+    # 2. Extract parameters (using first call for each expiration)
+    opt = chain.calls.iloc[0] 
     S = current_price
     K = opt.strike
     sigma = opt.impliedVolatility
-    r = 0.04  # Example risk-free rate (approx 4% in 2026)
+    r = 0.04  # Risk-free rate (approx 4% in 2026)
     
-    
-    
-    # 3. Calculate Time to Expiration (T) in years
-
+    # 3. Calculate Time to Expiration (T)
     days_to_expiry = (datetime.strptime(expirations[i], '%Y-%m-%d') - datetime.now()).days
     T = max(days_to_expiry, 1) / 365
-    # 4. Compute Theta
-    theta_list.append(black_scholes_theta(S, K, T, r, sigma, 'call'))
-    print(f"Daily Theta: {theta_list[i]:.4f}")
     
+    # 4. Compute Greeks
+    greeks = BlackScholesGreeks(S, K, T, r, sigma)
+    
+    d = greeks.delta('call')
+    g = greeks.gamma()
+    v = greeks.vega()
+    t = greeks.theta('call')
+    rho = greeks.rho('call')
 
-
-
+    print(f"{expirations[i]:<12} | {d:>8.4f} | {g:>8.4f} | {v:>8.4f} | {t:>8.4f} | {rho:>8.4f}")
