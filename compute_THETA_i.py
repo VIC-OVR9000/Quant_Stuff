@@ -47,34 +47,40 @@ class BlackScholesGreeks:
 
 
 # 1. Fetch market data
-ticker = yf.Ticker("ROBN")
+ticker = yf.Ticker("USAR")
 current_price = ticker.fast_info['lastPrice']
 expirations = ticker.options
 
-print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
-print("-" * 140)
+#print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
+#print("-" * 140)
+print(expirations)
 
-for i in range(len(expirations)):
-    chain = ticker.option_chain(expirations[i])
+for j in range(len(expirations)):
+    print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
+    print("-" * 140)
     
-    # 2. Extract parameters (using first call for each expiration)
-    opt = chain.calls.iloc[0] 
-    S = current_price
-    K = opt.strike
-    sigma = opt.impliedVolatility
-    r = 0.04  # Risk-free rate (approx 4% in 2026)
-    
-    # 3. Calculate Time to Expiration (T)
-    days_to_expiry = (datetime.strptime(expirations[i], '%Y-%m-%d') - datetime.now()).days
-    T = max(days_to_expiry, 1) / 365
-    
-    # 4. Compute Greeks
-    greeks = BlackScholesGreeks(S, K, T, r, sigma)
-    
-    d = greeks.delta('call')
-    g = greeks.gamma()
-    v = greeks.vega()
-    t = greeks.theta('call')
-    rho = greeks.rho('call')
-                    #### <8.4 is for space and deciaml format
-    print(f"{expirations[i]:<12} | {d:>8.4f} | {g:>8.4f} | {v:>8.4f} | {t:>8.4f} | {rho:>8.4f} | {S:<8.4} | {K:<8.4} | {T:<8.4} | {r:<8.4} | {sigma:<8.4}")
+    for i in range(len(expirations[j])):
+        chain = ticker.option_chain(expirations[j])
+        
+        # 2. Extract parameters (using first call for each expiration)
+        opt = chain.calls.iloc[i]
+        #print(opt)
+        S = current_price
+        K = opt.strike
+        sigma = opt.impliedVolatility
+        r = 0.04  # Risk-free rate (approx 4% in 2026)
+        
+        # 3. Calculate Time to Expiration (T)
+        days_to_expiry = (datetime.strptime(expirations[j], '%Y-%m-%d') - datetime.now()).days
+        T = max(days_to_expiry, 1) / 365
+        
+        # 4. Compute Greeks
+        greeks = BlackScholesGreeks(S, K, T, r, sigma)
+        
+        d = greeks.delta('call')
+        g = greeks.gamma()
+        v = greeks.vega()
+        t = greeks.theta('call')
+        rho = greeks.rho('call')
+                        #### <8.4 is for space and deciaml format
+        print(f"{expirations[j]:<12} | {d:>8.4f} | {g:>8.4f} | {v:>8.4f} | {t:>8.4f} | {rho:>8.4f} | {S:<8.4} | {K:<8.4} | {T:<8.4} | {r:<8.4} | {sigma:<8.4}")
