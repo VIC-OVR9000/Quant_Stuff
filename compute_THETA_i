@@ -1,0 +1,41 @@
+import numpy as np
+import yfinance as yf
+from scipy.stats import norm
+from datetime import datetime
+
+def black_scholes_theta(S, K, T, r, sigma, option_type='call'):
+    # d1 and d2 calculations
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    
+    # Yearly Theta formula
+    term1 = -(S * norm.pdf(d1) * sigma) / (2 * np.sqrt(T)+0.0000001)
+    if option_type == 'call':
+        term2 = r * K * np.exp(-r * T) * norm.cdf(d2)
+        theta = term1 - term2
+    else:
+        term2 = r * K * np.exp(-r * T) * norm.cdf(-d2)
+        theta = term1 + term2
+        
+    return theta / 365  # Return daily decay
+
+# 1. Fetch market data
+ticker = yf.Ticker("USAR")
+current_price = ticker.fast_info['lastPrice']
+expirations = ticker.options
+chain = ticker.option_chain(expirations[0]) # Get nearest expiration
+
+# 2. Extract parameters for a specific strike
+opt = chain.calls.iloc[0] # Example: first call option
+S = current_price
+K = opt.strike
+sigma = opt.impliedVolatility
+r = 0.04  # Example risk-free rate (approx 4% in 2026)
+
+# 3. Calculate Time to Expiration (T) in years
+days_to_expiry = (datetime.strptime(expirations[0], '%Y-%m-%d') - datetime.now()).days
+T = max(days_to_expiry, 1) / 365
+
+# 4. Compute Theta
+theta = black_scholes_theta(S, K, T, r, sigma, 'call')
+print(f"Daily Theta: {theta:.4f}")
