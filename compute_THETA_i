@@ -23,19 +23,30 @@ def black_scholes_theta(S, K, T, r, sigma, option_type='call'):
 ticker = yf.Ticker("USAR")
 current_price = ticker.fast_info['lastPrice']
 expirations = ticker.options
-chain = ticker.option_chain(expirations[0]) # Get nearest expiration
+theta_list = []
 
-# 2. Extract parameters for a specific strike
-opt = chain.calls.iloc[0] # Example: first call option
-S = current_price
-K = opt.strike
-sigma = opt.impliedVolatility
-r = 0.04  # Example risk-free rate (approx 4% in 2026)
 
-# 3. Calculate Time to Expiration (T) in years
-days_to_expiry = (datetime.strptime(expirations[0], '%Y-%m-%d') - datetime.now()).days
-T = max(days_to_expiry, 1) / 365
+for i in range(len(expirations)):
 
-# 4. Compute Theta
-theta = black_scholes_theta(S, K, T, r, sigma, 'call')
-print(f"Daily Theta: {theta:.4f}")
+    chain = ticker.option_chain(expirations[i]) # Get nearest expiration
+
+    # 2. Extract parameters for a specific strike
+    opt = chain.calls.iloc[i] # Example: first call option
+    S = current_price
+    K = opt.strike
+    sigma = opt.impliedVolatility
+    r = 0.04  # Example risk-free rate (approx 4% in 2026)
+    
+    
+    
+    # 3. Calculate Time to Expiration (T) in years
+
+    days_to_expiry = (datetime.strptime(expirations[i], '%Y-%m-%d') - datetime.now()).days
+    T = max(days_to_expiry, 1) / 365
+    # 4. Compute Theta
+    theta_list.append(black_scholes_theta(S, K, T, r, sigma, 'call'))
+    print(f"Daily Theta: {theta_list[i]:.4f}")
+    
+
+
+
