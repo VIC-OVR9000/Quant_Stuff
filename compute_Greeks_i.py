@@ -2,6 +2,7 @@ import numpy as np
 import yfinance as yf
 from scipy.stats import norm
 from datetime import datetime
+import pandas as pd
 
 class BlackScholesGreeks:
     def __init__(self, S, K, T, r, sigma):
@@ -47,13 +48,20 @@ class BlackScholesGreeks:
 
 
 # 1. Fetch market data
-ticker = yf.Ticker("ROBN")
+ticker = yf.Ticker("USAR")#### can be a text input
 current_price = ticker.fast_info['lastPrice']
 expirations = ticker.options
 
 #print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
 #print("-" * 140)
 print(expirations)
+
+
+OPT_DATA= []
+
+OPT_DATA.append(['Exp Date', 'Delta', 'Gamma' ,'Vega','Theta','Rho', 'S' , 'K' , 'T', 'r' ,'sigma'])
+
+
 
 for j in range(len(expirations)):
     print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
@@ -83,4 +91,13 @@ for j in range(len(expirations)):
         t = greeks.theta('call')
         rho = greeks.rho('call')
                         #### <8.4 is for space and deciaml format
-        print(f"{expirations[j]:<12} | {d:>8.4f} | {g:>8.4f} | {v:>8.4f} | {t:>8.4f} | {rho:>8.4f} | {S:<8.4} | {K:<8.4} | {T:<8.4} | {r:<8.4} | {sigma:<8.4}")
+        #print(f"{expirations[j]:<12} | {d:>8.4f} | {g:>8.4f} | {v:>8.4f} | {t:>8.4f} | {rho:>8.4f} | {S:<8.4} | {K:<8.4} | {T:<8.4} | {r:<8.4} | {sigma:<8.4}")
+        OPT_DATA.append([expirations[j],d,g,v,t,rho,S,K,T,r,sigma])
+#print(OPT_DATA)
+
+OPT_DATA = pd.DataFrame(OPT_DATA)
+
+OPT_DATA.to_csv( 'OPT_DATA.csv'  ,index = True)
+
+
+print("Process OVER")
