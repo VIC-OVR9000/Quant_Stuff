@@ -46,9 +46,9 @@ class BlackScholesGreeks:
 
 
 
-
+stock_sym = "USAR"
 # 1. Fetch market data
-ticker = yf.Ticker("USAR")#### can be a text input
+ticker = yf.Ticker(stock_sym)#### can be a text input
 current_price = ticker.fast_info['lastPrice']
 expirations = ticker.options
 
@@ -61,7 +61,7 @@ OPT_DATA= []
 
 OPT_DATA.append(['Exp Date', 'Delta', 'Gamma' ,'Vega','Theta','Rho', 'S' , 'K' , 'T', 'r' ,'sigma'])
 
-
+# for calls and puts add for 'k' here
 
 for j in range(len(expirations)):
     print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
@@ -93,11 +93,11 @@ for j in range(len(expirations)):
                         #### <8.4 is for space and deciaml format
         #print(f"{expirations[j]:<12} | {d:>8.4f} | {g:>8.4f} | {v:>8.4f} | {t:>8.4f} | {rho:>8.4f} | {S:<8.4} | {K:<8.4} | {T:<8.4} | {r:<8.4} | {sigma:<8.4}")
         OPT_DATA.append([expirations[j],d,g,v,t,rho,S,K,T,r,sigma])
-#print(OPT_DATA)
+        ### ENOF for kji
+
 
 OPT_DATA = pd.DataFrame(OPT_DATA)
-
-OPT_DATA.to_csv( 'OPT_DATA.csv'  ,index = True)
-
+OPT_DATA.to_csv( f'OPT_DATA_{stock_sym}.csv'  ,index = True)
+#print(OPT_DATA)
 
 print("Process OVER")
