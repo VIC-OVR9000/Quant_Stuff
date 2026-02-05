@@ -49,7 +49,7 @@ class BlackScholesGreeks:
 stock_sym = "USAR"
 # 1. Fetch market data
 ticker = yf.Ticker(stock_sym)#### can be a text input
-current_price = ticker.fast_info['lastPrice']
+current_price = ticker.info.get('currentPrice')
 expirations = ticker.options
 
 #print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
@@ -61,21 +61,24 @@ OPT_DATA= []
 
 OPT_DATA.append(['Exp Date', 'Delta', 'Gamma' ,'Vega','Theta','Rho', 'S' , 'K' , 'T', 'r' ,'sigma'])
 
-# for calls and puts add for 'k' here
 
+# for calls and puts add for 'k' here
 for j in range(len(expirations)):
     print(f"{'Exp Date':<12} | {'Delta':<8} | {'Gamma':<8} | {'Vega':<8} | {'Theta':<8} | {'Rho':<8} | {'S':<8} | {'K':<8} | {'T':<8} | {'r':<8} | {'sigma':<8}")
     print("-" * 140)
+
+    chain = ticker.option_chain(expirations[j])
+    opt = chain.calls
     
-    for i in range(len(expirations[j])-1):
-        chain = ticker.option_chain(expirations[j])
+    for i in range(len(opt['strike'])):
+        
         
         # 2. Extract parameters (using first call for each expiration)
-        opt = chain.calls.iloc[i]
+        
         #print(opt)
         S = current_price
-        K = opt.strike
-        sigma = opt.impliedVolatility
+        K = opt['strike'][i]
+        sigma = opt['impliedVolatility'][i]
         r = 0.04  # Risk-free rate (approx 4% in 2026)
         
         # 3. Calculate Time to Expiration (T)
