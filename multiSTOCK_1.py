@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 #main filepath
-filepath = 'D:\\Python_DOCS\\STOCK_CSVs\\'
+filepath = ''
 
 #extract symbol from ETF holdings file
 #symPATH = 'D:\\Stock_stuff\\OO_DIVS.csv'
@@ -109,7 +109,7 @@ print(pc_DF)
 
 
 
-holdpath = 'D:\\Stock_stuff\\'
+holdpath = ''
 pc_DF.to_csv('Multi_STOCK_STATS2.csv', index=True)
 
 POS_mean =  np.mean(pc_DF['probPOS'])
